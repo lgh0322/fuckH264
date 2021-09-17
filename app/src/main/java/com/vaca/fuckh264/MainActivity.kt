@@ -10,6 +10,7 @@ import android.view.SurfaceHolder
 import com.vaca.fuckh264.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.*
 import java.nio.ByteBuffer
@@ -85,7 +86,7 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private fun readH264FromFile() {
+    private suspend fun readH264FromFile() {
         try {
             val dictionaryStream: InputStream = assets.open("w.h264")
             var len = dictionaryStream.available()
@@ -103,6 +104,7 @@ class MainActivity : AppCompatActivity() {
                                 fileBytes, i, j
                             )
                             offerDecoder(temp,temp.size)
+                            delay(100)
                             break@end
                         }
                     }
