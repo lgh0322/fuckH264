@@ -1,4 +1,4 @@
-package com.vaca.fuckh264;
+package com.vaca.fuckh264.util;
 
 import android.content.Context;
 
