@@ -1,4 +1,4 @@
-package com.vaca.fuckh264
+package com.vaca.fuckh264.record
 
 import android.util.Size
 import java.nio.ByteBuffer

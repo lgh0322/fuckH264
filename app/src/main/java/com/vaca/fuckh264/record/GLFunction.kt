@@ -1,10 +1,11 @@
-package com.vaca.fuckh264
+package com.vaca.fuckh264.record
 
 import android.app.ActivityManager
 import android.content.Context
 import android.opengl.EGL14
 import android.opengl.GLES20
 import android.util.Log
+import com.vaca.fuckh264.MainApplication
 
 
 /**

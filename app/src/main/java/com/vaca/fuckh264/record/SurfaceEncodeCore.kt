@@ -1,4 +1,4 @@
-package com.vaca.fuckh264
+package com.vaca.fuckh264.record
 
 import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext

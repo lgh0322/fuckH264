@@ -1,4 +1,4 @@
-package com.vaca.fuckh264
+package com.vaca.fuckh264.record
 
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
