@@ -41,25 +41,24 @@ class MainActivity : AppCompatActivity() {
         dictionaryStream.read(dicByteArray)
 */
 
-        val holder=binding.ga.holder
-        holder.addCallback(object:SurfaceHolder.Callback{
-            override fun surfaceCreated(p0: SurfaceHolder) {
-
-            }
-
-            override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
-                setupDecoder(binding.ga.holder.surface, MediaFormat.MIMETYPE_VIDEO_AVC, 1280, 720)
-                dataScope.launch {
-                    readH264FromFile()
-                }
-            }
-
-            override fun surfaceDestroyed(p0: SurfaceHolder) {
-
-            }
-
-        })
-
+//        val holder=binding.ga.holder
+//        holder.addCallback(object:SurfaceHolder.Callback{
+//            override fun surfaceCreated(p0: SurfaceHolder) {
+//
+//            }
+//
+//            override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
+//                setupDecoder(binding.ga.holder.surface, MediaFormat.MIMETYPE_VIDEO_AVC, 1280, 720)
+//                dataScope.launch {
+//                    readH264FromFile()
+//                }
+//            }
+//
+//            override fun surfaceDestroyed(p0: SurfaceHolder) {
+//
+//            }
+//
+//        })
 
 
 
