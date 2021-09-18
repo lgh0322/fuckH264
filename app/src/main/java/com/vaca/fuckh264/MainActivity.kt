@@ -1,58 +1,55 @@
 package com.vaca.fuckh264
 
-import android.app.Activity
 import android.content.Context
-import android.graphics.*
+import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
-import android.media.ImageReader
-import android.media.MediaCodec
 import android.media.MediaFormat
-import android.media.MediaRecorder
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
-import android.util.Size
 import android.view.Surface
-import android.view.SurfaceHolder
 import android.view.TextureView
+import androidx.appcompat.app.AppCompatActivity
 import com.vaca.fuckh264.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.io.*
-import java.nio.ByteBuffer
+import com.vaca.fuckh264.record.VideoRecorder
+import com.vaca.fuckh264.record.genData
+import com.vaca.fuckh264.record.safeList
+import com.vaca.fuckh264.util.PathUtil
 import java.util.*
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var binding:ActivityMainBinding
+    lateinit var binding: ActivityMainBinding
 
-
-
+    lateinit var mySurface: Surface
 
 
     private val mCameraId = "0"
-    lateinit var mPreviewSize: Size
-    private val PREVIEW_WIDTH = 1080
-    private val PREVIEW_HEIGHT = 1920
     private var mCameraDevice: CameraDevice? = null
     lateinit var mHandler: Handler
     lateinit var mCaptureSession: CameraCaptureSession
     lateinit var mPreviewBuilder: CaptureRequest.Builder
     private var mHandlerThread: HandlerThread? = null
-
+    private val recorderThread by lazy {
+        Executors.newFixedThreadPool(3)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding= ActivityMainBinding.inflate(layoutInflater)
+        PathUtil.initVar(this)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.ga.surfaceTextureListener=object: TextureView.SurfaceTextureListener{
+        binding.ga.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(p0: SurfaceTexture, p1: Int, p2: Int) {
                 startBackgroundThread()
-                openCamera()
+                start(1080, 1920, 80000000, surfaceCallback = {
+
+                    Log.e("fuckfuck", "了艰苦撒旦看风景卢卡斯大量进口")
+                    mySurface = it
+                    openCamera()
+                })
             }
 
             override fun onSurfaceTextureSizeChanged(p0: SurfaceTexture, p1: Int, p2: Int) {
@@ -61,7 +58,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onSurfaceTextureDestroyed(p0: SurfaceTexture): Boolean {
-               return false
+                return false
             }
 
             override fun onSurfaceTextureUpdated(p0: SurfaceTexture) {
@@ -70,9 +67,6 @@ class MainActivity : AppCompatActivity() {
 
         }
     }
-
-
-
 
 
     private fun startBackgroundThread() {
@@ -115,6 +109,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val isRecording = safeList<Int>()
+    val videoFormats = safeList<MediaFormat>()
+
+    fun start(
+        width: Int, height: Int, bitRate: Int, frameRate: Int = 24,
+        frameInterval: Int = 5,
+        surfaceCallback: (surface: Surface) -> Unit
+    ) {
+        isRecording.add(1)
+        val videoRecorder = VideoRecorder(width, height, bitRate, frameRate,
+            frameInterval, isRecording, surfaceCallback, { frame, timeStamp, bufferInfo, data ->
+                val byteArray = data.genData()
+                Log.e("fuckfuck", "gg   " + byteArray.size)
+
+            }){
+            videoFormats.add(it)
+        }
+        recorderThread.execute(videoRecorder)
+
+    }
 
     private val mSessionStateCallback: CameraCaptureSession.StateCallback =
         object : CameraCaptureSession.StateCallback() {
@@ -129,16 +143,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun startPreview(camera: CameraDevice) {
         mPreviewBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
-        val fuck=binding.ga.surfaceTexture
-        val fuck2=Surface(fuck)
-        mPreviewBuilder.addTarget(fuck2)
+        mPreviewBuilder.addTarget(mySurface)
         camera.createCaptureSession(
-            Arrays.asList(fuck2),
+            Arrays.asList(mySurface),
             mSessionStateCallback,
             mHandler
         )
     }
-
 
 
     private fun updatePreview() {
