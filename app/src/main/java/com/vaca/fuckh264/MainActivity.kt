@@ -1,13 +1,13 @@
 package com.vaca.fuckh264
 
+import android.app.Activity
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.ImageFormat
-import android.graphics.SurfaceTexture
+import android.graphics.*
 import android.hardware.camera2.*
 import android.media.ImageReader
 import android.media.MediaCodec
 import android.media.MediaFormat
+import android.media.MediaRecorder
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -36,8 +36,8 @@ class MainActivity : AppCompatActivity() {
 
     private val mCameraId = "0"
     lateinit var mPreviewSize: Size
-    private val PREVIEW_WIDTH = 1920
-    private val PREVIEW_HEIGHT = 1080
+    private val PREVIEW_WIDTH = 1080
+    private val PREVIEW_HEIGHT = 1920
     private var mCameraDevice: CameraDevice? = null
     lateinit var mHandler: Handler
     lateinit var mCaptureSession: CameraCaptureSession
@@ -70,6 +70,7 @@ class MainActivity : AppCompatActivity() {
 
         }
     }
+
 
 
 
@@ -108,7 +109,6 @@ class MainActivity : AppCompatActivity() {
         try {
             val cameraManager =
                 getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            mPreviewSize = Size(PREVIEW_WIDTH, PREVIEW_HEIGHT)
             cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback, mHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
@@ -138,6 +138,8 @@ class MainActivity : AppCompatActivity() {
             mHandler
         )
     }
+
+
 
     private fun updatePreview() {
         mHandler.post(Runnable {
