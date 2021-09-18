@@ -51,12 +51,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.ga.surfaceTextureListener=object: TextureView.SurfaceTextureListener{
             override fun onSurfaceTextureAvailable(p0: SurfaceTexture, p1: Int, p2: Int) {
-
+                startBackgroundThread()
+                openCamera()
             }
 
             override fun onSurfaceTextureSizeChanged(p0: SurfaceTexture, p1: Int, p2: Int) {
-              startBackgroundThread()
-                openCamera()
+
 
             }
 
@@ -130,11 +130,10 @@ class MainActivity : AppCompatActivity() {
     private fun startPreview(camera: CameraDevice) {
         mPreviewBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
         val fuck=binding.ga.surfaceTexture
-        mPreviewBuilder.addTarget(mImageReader.surface)
-
-
+        val fuck2=Surface(fuck)
+        mPreviewBuilder.addTarget(fuck2)
         camera.createCaptureSession(
-            Arrays.asList(mImageReader.surface),
+            Arrays.asList(fuck2),
             mSessionStateCallback,
             mHandler
         )
