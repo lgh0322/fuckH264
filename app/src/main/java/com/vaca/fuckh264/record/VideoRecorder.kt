@@ -25,7 +25,7 @@ import java.nio.ByteBuffer
  * */
 class VideoRecorder(private val width: Int, private val height: Int,
                     bitRate: Int,
-                    frameRate: Int = 25,
+                    frameRate: Int = 15,
                     frameInterval: Int = 5,
                     private val isRecording: List<Any>,
                     private val readySurface: (Surface) -> Unit,
@@ -89,13 +89,6 @@ class VideoRecorder(private val width: Int, private val height: Int,
                 isFormatChanged = true
             }
         }, {
-            //            手动设置帧间隔
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            val bundle = Bundle()
-//            bundle.putLong(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
-//            codec.setParameters(bundle)
-//            }
-
             val encodedData = codec.getOutputBuffer(it)
             if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0) {
                 bufferInfo.size = 0

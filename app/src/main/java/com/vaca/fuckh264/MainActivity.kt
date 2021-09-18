@@ -1,29 +1,33 @@
 package com.vaca.fuckh264
 
 import android.content.Context
-import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
+import android.media.MediaCodec
 import android.media.MediaFormat
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.view.Surface
-import android.view.TextureView
+import android.view.SurfaceHolder
 import androidx.appcompat.app.AppCompatActivity
 import com.vaca.fuckh264.databinding.ActivityMainBinding
-import com.vaca.fuckh264.record.VideoRecorder
-import com.vaca.fuckh264.record.genData
-import com.vaca.fuckh264.record.safeList
+import com.vaca.fuckh264.record.*
 import com.vaca.fuckh264.util.PathUtil
+import kotlinx.coroutines.*
+import java.io.File
+import java.lang.Runnable
 import java.util.*
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
+    private var mMediaHead: ByteArray? = null
+
     lateinit var binding: ActivityMainBinding
 
     lateinit var mySurface: Surface
+    val dataScope = CoroutineScope(Dispatchers.IO)
 
 
     private val mCameraId = "0"
@@ -36,36 +40,127 @@ class MainActivity : AppCompatActivity() {
         Executors.newFixedThreadPool(3)
     }
 
+
+    companion object {
+        private const val TAG = "StudyCamera"
+    }
+
+
+    private var mMediaDecoder: MediaCodec? = null
+
+
+
+    private fun setupDecoder(surface: Surface?, mime: String, width: Int, height: Int): Boolean {
+        Log.d(TAG, "setupDecoder surface:$surface mime:$mime w:$width h:$height")
+        val format = MediaFormat.createVideoFormat(mime, width, height)
+        mMediaDecoder = MediaCodec.createDecoderByType(mime)
+        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 720 *1280)
+        format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1280)
+        format.setInteger(MediaFormat.KEY_MAX_WIDTH, 720)
+/*        format.setByteBuffer("csd-0", ByteBuffer.wrap(mSps))
+        format.setByteBuffer("csd-1", ByteBuffer.wrap(mPps))*/
+        if (mMediaDecoder == null) {
+            Log.e("DecodeActivity", "createDecoderByType fail!")
+            return false
+        }
+
+        mMediaDecoder!!.configure(format, surface, null, 0)
+        mMediaDecoder!!.start()
+        return true
+    }
+
+
+
+
+
+    private fun offerDecoder(input: ByteArray, length: Int) {
+        try {
+            val inputBuffers = mMediaDecoder!!.inputBuffers
+            val inputBufferIndex = mMediaDecoder!!.dequeueInputBuffer(-1)
+            if (inputBufferIndex >= 0) {
+                val inputBuffer = inputBuffers[inputBufferIndex]
+                inputBuffer.put(input, 0, length)
+                inputBuffer.clear()
+                inputBuffer.limit(length)
+                mMediaDecoder!!.queueInputBuffer(inputBufferIndex, 0, length, 0, MediaCodec.BUFFER_FLAG_SYNC_FRAME)
+            }
+            val bufferInfo = MediaCodec.BufferInfo()
+            var outputBufferIndex = mMediaDecoder!!.dequeueOutputBuffer(bufferInfo, 0)
+            while (outputBufferIndex >= 0) {
+                Log.d(TAG, "offerDecoder OutputBufSize:" + bufferInfo.size + " bytes written")
+                //If a valid surface was specified when configuring the codec,
+                //passing true renders this output buffer to the surface.
+                mMediaDecoder!!.releaseOutputBuffer(outputBufferIndex, true)
+                outputBufferIndex = mMediaDecoder!!.dequeueOutputBuffer(bufferInfo, 0)
+            }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         PathUtil.initVar(this)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.ga.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
-            override fun onSurfaceTextureAvailable(p0: SurfaceTexture, p1: Int, p2: Int) {
-                startBackgroundThread()
-                start(1080, 1920, 80000000, surfaceCallback = {
 
-                    Log.e("fuckfuck", "了艰苦撒旦看风景卢卡斯大量进口")
+        val holder=binding.ga.holder
+        holder.addCallback(object: SurfaceHolder.Callback{
+            override fun surfaceCreated(p0: SurfaceHolder) {
+
+            }
+
+            override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
+                setupDecoder(binding.ga.holder.surface, MediaFormat.MIMETYPE_VIDEO_AVC, 720, 1280)
+                startBackgroundThread()
+                start(720, 1280, 8000000, surfaceCallback = {
                     mySurface = it
                     openCamera()
                 })
             }
 
-            override fun onSurfaceTextureSizeChanged(p0: SurfaceTexture, p1: Int, p2: Int) {
-
-
-            }
-
-            override fun onSurfaceTextureDestroyed(p0: SurfaceTexture): Boolean {
-                return false
-            }
-
-            override fun onSurfaceTextureUpdated(p0: SurfaceTexture) {
+            override fun surfaceDestroyed(p0: SurfaceHolder) {
 
             }
 
-        }
+        })
+
+   /*     MainScope().launch {
+            delay(5000)
+            val fileBytes=pool!!
+            start@ for (i in 0 until fileBytes.size) {
+                if (fileBytes[i] == 0.toByte() && fileBytes[i + 1] == 0.toByte() && fileBytes[i + 2] == 0.toByte() && fileBytes[i + 3] == 1.toByte()
+                ) {
+                    end@ for (j in i + 4 until fileBytes.size) {
+                        if (fileBytes[j] == 0.toByte() && fileBytes[j + 1] == 0.toByte() && fileBytes[j + 2] == 0.toByte() && fileBytes[j + 3] == 1.toByte()
+                        ) {
+                            val temp: ByteArray = Arrays.copyOfRange(
+                                fileBytes, i, j
+                            )
+                            offerDecoder(temp,temp.size)
+                            break@end
+                        }
+                    }
+                }
+            }
+        }*/
+
+
+
     }
 
 
@@ -111,17 +206,28 @@ class MainActivity : AppCompatActivity() {
 
     private val isRecording = safeList<Int>()
     val videoFormats = safeList<MediaFormat>()
+    val audioFormats = safeList<MediaFormat>()
+
+
+    var pool:ByteArray?=null
 
     fun start(
-        width: Int, height: Int, bitRate: Int, frameRate: Int = 24,
+        width: Int, height: Int, bitRate: Int, frameRate: Int = 7,
         frameInterval: Int = 5,
         surfaceCallback: (surface: Surface) -> Unit
     ) {
         isRecording.add(1)
         val videoRecorder = VideoRecorder(width, height, bitRate, frameRate,
             frameInterval, isRecording, surfaceCallback, { frame, timeStamp, bufferInfo, data ->
-                val byteArray = data.genData()
-                Log.e("fuckfuck", "gg   " + byteArray.size)
+                val fileBytes = data.genData()
+
+
+                pool=add(pool,fileBytes)
+
+             /*   if(byteArray[0]==0.toByte() && byteArray[1]==0.toByte() && byteArray[2]==0.toByte()&& byteArray[3]==1.toByte()&&byteArray[4]==0x65.toByte()){
+                    Log.e("fuckGG","fuckfcuk")
+                }
+*/
 
             }){
             videoFormats.add(it)
