@@ -12,11 +12,12 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import androidx.appcompat.app.AppCompatActivity
 import com.vaca.fuckh264.databinding.ActivityMainBinding
-import com.vaca.fuckh264.record.*
+import com.vaca.fuckh264.record.VideoRecorder
+import com.vaca.fuckh264.record.genData
+import com.vaca.fuckh264.record.safeList
 import com.vaca.fuckh264.util.PathUtil
-import kotlinx.coroutines.*
-import java.io.File
-import java.lang.Runnable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.util.*
 import java.util.concurrent.Executors
 
@@ -49,20 +50,15 @@ class MainActivity : AppCompatActivity() {
     private var mMediaDecoder: MediaCodec? = null
 
 
-
     private fun setupDecoder(surface: Surface?, mime: String, width: Int, height: Int): Boolean {
         Log.d(TAG, "setupDecoder surface:$surface mime:$mime w:$width h:$height")
         val format = MediaFormat.createVideoFormat(mime, width, height)
         mMediaDecoder = MediaCodec.createDecoderByType(mime)
-        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 720 *1280)
-        format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1280)
-        format.setInteger(MediaFormat.KEY_MAX_WIDTH, 720)
+/*        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 1080*1920)
+        format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1920)
+        format.setInteger(MediaFormat.KEY_MAX_WIDTH, 1080)*/
 /*        format.setByteBuffer("csd-0", ByteBuffer.wrap(mSps))
         format.setByteBuffer("csd-1", ByteBuffer.wrap(mPps))*/
-        if (mMediaDecoder == null) {
-            Log.e("DecodeActivity", "createDecoderByType fail!")
-            return false
-        }
 
         mMediaDecoder!!.configure(format, surface, null, 0)
         mMediaDecoder!!.start()
@@ -70,10 +66,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-
-
-
-    private fun offerDecoder(input: ByteArray, length: Int) {
+    private fun offerDecoder2(input: ByteArray, length: Int) {
         try {
             val inputBuffers = mMediaDecoder!!.inputBuffers
             val inputBufferIndex = mMediaDecoder!!.dequeueInputBuffer(-1)
@@ -82,7 +75,13 @@ class MainActivity : AppCompatActivity() {
                 inputBuffer.put(input, 0, length)
                 inputBuffer.clear()
                 inputBuffer.limit(length)
-                mMediaDecoder!!.queueInputBuffer(inputBufferIndex, 0, length, 0, MediaCodec.BUFFER_FLAG_SYNC_FRAME)
+                mMediaDecoder!!.queueInputBuffer(
+                    inputBufferIndex,
+                    0,
+                    length,
+                    0,
+                    MediaCodec.BUFFER_FLAG_SYNC_FRAME
+                )
             }
             val bufferInfo = MediaCodec.BufferInfo()
             var outputBufferIndex = mMediaDecoder!!.dequeueOutputBuffer(bufferInfo, 0)
@@ -99,16 +98,32 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    private fun offerDecoder(input: ByteArray, length: Int, time: Long) {
+        try {
+            val inputBuffers = mMediaDecoder!!.inputBuffers
+            val inputBufferIndex = mMediaDecoder!!.dequeueInputBuffer(-1)
+            if (inputBufferIndex >= 0) {
+                val inputBuffer = inputBuffers[inputBufferIndex]
+                val timestamp = time
+                Log.d(TAG, "offerDecoder timestamp: $timestamp inputSize: $length bytes")
+                inputBuffer.clear()
+                inputBuffer.put(input, 0, length)
+                mMediaDecoder!!.queueInputBuffer(inputBufferIndex, 0, length, timestamp, 0)
+            }
+            val bufferInfo = MediaCodec.BufferInfo()
+            var outputBufferIndex = mMediaDecoder!!.dequeueOutputBuffer(bufferInfo, 0)
+            while (outputBufferIndex >= 0) {
+                Log.d(TAG, "offerDecoder OutputBufSize:" + bufferInfo.size + " bytes written")
 
-
-
-
-
-
-
-
-
-
+                //If a valid surface was specified when configuring the codec,
+                //passing true renders this output buffer to the surface.
+                mMediaDecoder!!.releaseOutputBuffer(outputBufferIndex, true)
+                outputBufferIndex = mMediaDecoder!!.dequeueOutputBuffer(bufferInfo, 0)
+            }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,8 +133,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val holder=binding.ga.holder
-        holder.addCallback(object: SurfaceHolder.Callback{
+        val holder = binding.ga.holder
+        holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(p0: SurfaceHolder) {
 
             }
@@ -127,7 +142,7 @@ class MainActivity : AppCompatActivity() {
             override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
                 setupDecoder(binding.ga.holder.surface, MediaFormat.MIMETYPE_VIDEO_AVC, 720, 1280)
                 startBackgroundThread()
-                start(720, 1280, 8000000, surfaceCallback = {
+                start(720, 1280, 800000, surfaceCallback = {
                     mySurface = it
                     openCamera()
                 })
@@ -138,27 +153,6 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
-
-   /*     MainScope().launch {
-            delay(5000)
-            val fileBytes=pool!!
-            start@ for (i in 0 until fileBytes.size) {
-                if (fileBytes[i] == 0.toByte() && fileBytes[i + 1] == 0.toByte() && fileBytes[i + 2] == 0.toByte() && fileBytes[i + 3] == 1.toByte()
-                ) {
-                    end@ for (j in i + 4 until fileBytes.size) {
-                        if (fileBytes[j] == 0.toByte() && fileBytes[j + 1] == 0.toByte() && fileBytes[j + 2] == 0.toByte() && fileBytes[j + 3] == 1.toByte()
-                        ) {
-                            val temp: ByteArray = Arrays.copyOfRange(
-                                fileBytes, i, j
-                            )
-                            offerDecoder(temp,temp.size)
-                            break@end
-                        }
-                    }
-                }
-            }
-        }*/
-
 
 
     }
@@ -209,7 +203,7 @@ class MainActivity : AppCompatActivity() {
     val audioFormats = safeList<MediaFormat>()
 
 
-    var pool:ByteArray?=null
+    var pool: ByteArray? = null
 
     fun start(
         width: Int, height: Int, bitRate: Int, frameRate: Int = 7,
@@ -219,17 +213,47 @@ class MainActivity : AppCompatActivity() {
         isRecording.add(1)
         val videoRecorder = VideoRecorder(width, height, bitRate, frameRate,
             frameInterval, isRecording, surfaceCallback, { frame, timeStamp, bufferInfo, data ->
-                val fileBytes = data.genData()
+                val byteArray = data.genData()
+var count=0
 
-
-                pool=add(pool,fileBytes)
-
-             /*   if(byteArray[0]==0.toByte() && byteArray[1]==0.toByte() && byteArray[2]==0.toByte()&& byteArray[3]==1.toByte()&&byteArray[4]==0x65.toByte()){
-                    Log.e("fuckGG","fuckfcuk")
+                for (k in 0 until byteArray.size - 5) {
+                    if (byteArray[0+k] == 0.toByte() && byteArray[1+k] == 0.toByte() && byteArray[2+k] == 0.toByte() && byteArray[3+k] == 1.toByte()) {
+                                        count++
+                    }
                 }
-*/
+                if(count>1){
+                    Log.e("gagax",count.toString())
+                }
 
-            }){
+
+//                if(mMediaHead==null){
+//                    mMediaHead=byteArray.clone()
+//                    offerDecoder2(mMediaHead!!,mMediaHead!!.size)
+//                    return@VideoRecorder
+//                }
+//
+//
+//
+//                if(byteArray[0]==0.toByte() && byteArray[1]==0.toByte() && byteArray[2]==0.toByte()&& byteArray[3]==1.toByte()&&byteArray[4]==0x65.toByte()){
+//                   /* var send=add(mMediaHead,byteArray)
+//                    offerDecoder2(send,send.size)*/
+//                    dataScope.launch {
+//                        offerDecoder2(mMediaHead!!,mMediaHead!!.size)
+//                        delay(2)
+//                        offerDecoder2(byteArray,byteArray.size)
+//                    }
+//
+//                }else{
+////                    var send=add(mMediaHead,byteArray)
+////                    offerDecoder2(send,send.size)
+//                    offerDecoder2(byteArray,byteArray.size)
+//                }
+
+                /* if(byteArray[0]==0.toByte() && byteArray[1]==0.toByte() && byteArray[2]==0.toByte()&& byteArray[3]==1.toByte()&&byteArray[4]==0x65.toByte()){
+                     Log.e("fuckGG","fuckfcuk")
+                 }*/
+
+            }) {
             videoFormats.add(it)
         }
         recorderThread.execute(videoRecorder)
