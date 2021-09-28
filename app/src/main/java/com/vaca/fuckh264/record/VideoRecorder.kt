@@ -5,6 +5,8 @@ import android.media.MediaFormat
 import android.util.Log
 import android.util.Size
 import android.view.Surface
+import com.vaca.fuckh264.Fuck
+import org.greenrobot.eventbus.EventBus
 
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -124,6 +126,7 @@ class VideoRecorder(
                     }
                     fuck2.get(ga,0,ga.size)
                    pps=ga
+                    EventBus.getDefault().post(Fuck(0))
                 }
             }
 
