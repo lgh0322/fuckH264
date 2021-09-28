@@ -36,16 +36,17 @@ class EglEnv(private val width: Int, private val height: Int) {
             checkEglError("EGL initialize failed")
         }
         val attribs = intArrayOf(
-                EGL14.EGL_BUFFER_SIZE, 32,
-                EGL14.EGL_ALPHA_SIZE, 8,
-                EGL14.EGL_BLUE_SIZE, 8,
-                EGL14.EGL_GREEN_SIZE, 8,
-                EGL14.EGL_RED_SIZE, 8,
-                EGL14.EGL_RENDERABLE_TYPE,
-                EGL14.EGL_OPENGL_ES2_BIT,
-                EGL14.EGL_SURFACE_TYPE,
-                EGL14.EGL_WINDOW_BIT,
-                EGL14.EGL_NONE)
+            EGL14.EGL_BUFFER_SIZE, 32,
+            EGL14.EGL_ALPHA_SIZE, 8,
+            EGL14.EGL_BLUE_SIZE, 8,
+            EGL14.EGL_GREEN_SIZE, 8,
+            EGL14.EGL_RED_SIZE, 8,
+            EGL14.EGL_RENDERABLE_TYPE,
+            EGL14.EGL_OPENGL_ES2_BIT,
+            EGL14.EGL_SURFACE_TYPE,
+            EGL14.EGL_WINDOW_BIT,
+            EGL14.EGL_NONE
+        )
 //        val attribs = intArrayOf(EGL14.EGL_RED_SIZE, 8,
 //                EGL14.EGL_GREEN_SIZE, 8,
 //                EGL14.EGL_BLUE_SIZE, 8,
@@ -57,16 +58,21 @@ class EglEnv(private val width: Int, private val height: Int) {
 //                EGL14.EGL_NONE)
         val configs = arrayOfNulls<EGLConfig>(1)
         val numConfigs = IntArray(1)
-        if (!EGL14.eglChooseConfig(eglDisplay, attribs, 0, configs,
-                        0, configs.size, numConfigs, 0)) {
+        if (!EGL14.eglChooseConfig(
+                eglDisplay, attribs, 0, configs,
+                0, configs.size, numConfigs, 0
+            )
+        ) {
             checkEglError("EGL choose config failed")
         }
         eglConfig = configs[0]
         // 构建上下文环境
         val attributes = intArrayOf(EGL14.EGL_CONTEXT_CLIENT_VERSION, 2, EGL14.EGL_NONE)
         // share_context 是否与其他上下文共享OpenGL资源
-        eglContext = EGL14.eglCreateContext(eglDisplay, eglConfig,
-                EGL14.EGL_NO_CONTEXT, attributes, 0)
+        eglContext = EGL14.eglCreateContext(
+            eglDisplay, eglConfig,
+            EGL14.EGL_NO_CONTEXT, attributes, 0
+        )
         if (eglContext == EGL14.EGL_NO_CONTEXT) {
             checkEglError("EGL create context failed ")
         }
@@ -88,8 +94,10 @@ class EglEnv(private val width: Int, private val height: Int) {
     fun buildOffScreenSurface(): EglEnv {
         // EGL 和 OpenGL ES环境搭建完毕，OpenGL输出可以获得。接着是EGL和设备连接
         // 连接工具是：EGLSurface，这是一个FrameBuffer
-        val pbufferAttributes = intArrayOf(EGL14.EGL_WIDTH, width, EGL14.EGL_HEIGHT,
-                height, EGL14.EGL_NONE)
+        val pbufferAttributes = intArrayOf(
+            EGL14.EGL_WIDTH, width, EGL14.EGL_HEIGHT,
+            height, EGL14.EGL_NONE
+        )
         eglSurface = EGL14.eglCreatePbufferSurface(eglDisplay, eglConfig, pbufferAttributes, 0)
         if (eglSurface == EGL14.EGL_NO_SURFACE) {
             checkEglError("EGL create Pbuffer surface failed")
@@ -105,15 +113,24 @@ class EglEnv(private val width: Int, private val height: Int) {
      * */
     fun buildWindowSurface(surface: Surface): EglEnv {
         val format = IntArray(1)
-        if (!EGL14.eglGetConfigAttrib(eglDisplay, eglConfig, EGL14.EGL_NATIVE_VISUAL_ID, format, 0)) {
+        if (!EGL14.eglGetConfigAttrib(
+                eglDisplay,
+                eglConfig,
+                EGL14.EGL_NATIVE_VISUAL_ID,
+                format,
+                0
+            )
+        ) {
             checkEglError("EGL getConfig attrib failed ")
         }
         if (eglSurface != EGL14.EGL_NO_SURFACE) {
             throw RuntimeException("EGL already config surface")
         }
         val surfaceAttribs = intArrayOf(EGL14.EGL_NONE)
-        eglSurface = EGL14.eglCreateWindowSurface(eglDisplay, eglConfig,
-                surface, surfaceAttribs, 0)
+        eglSurface = EGL14.eglCreateWindowSurface(
+            eglDisplay, eglConfig,
+            surface, surfaceAttribs, 0
+        )
         if (eglSurface == EGL14.EGL_NO_SURFACE) {
             checkEglError("EGL create window surface failed")
         }
@@ -151,8 +168,10 @@ class EglEnv(private val width: Int, private val height: Int) {
 
     fun release() {
         if (eglDisplay != EGL14.EGL_NO_DISPLAY) {
-            EGL14.eglMakeCurrent(eglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE,
-                    EGL14.EGL_NO_CONTEXT)
+            EGL14.eglMakeCurrent(
+                eglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE,
+                EGL14.EGL_NO_CONTEXT
+            )
             EGL14.eglDestroySurface(eglDisplay, eglSurface)
             EGL14.eglDestroyContext(eglDisplay, eglContext)
             EGL14.eglReleaseThread()

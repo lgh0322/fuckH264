@@ -89,7 +89,7 @@ class SurfaceEncodeCore(private val width: Int, private val height: Int) {
 class SurfaceProgram {
     //顶点着色器
     private val VERTEX_SHADER =
-            """
+        """
                 attribute vec4 position;
                 attribute vec4 aTexCoord;
                 uniform mat4 texMatrix;
@@ -102,7 +102,7 @@ class SurfaceProgram {
 
     //片元着色器
     private val FRAGMENT_SHADER =
-            """
+        """
                 #extension GL_OES_EGL_image_external : require
                 precision mediump float;
                 uniform samplerExternalOES texture;
@@ -138,12 +138,14 @@ class SurfaceProgram {
 
 class Camera2Draw(program: Int) {
     private val vertexBuffer by lazy {
-        createFloatBuffer(floatArrayOf(
+        createFloatBuffer(
+            floatArrayOf(
                 -1f, 1f, 0f,
                 -1f, -1f, 0f,
                 1f, -1f, 0f,
                 1f, 1f, 0f
-        ))
+            )
+        )
     }
 
     private val indexBuffer by lazy {
@@ -154,12 +156,14 @@ class Camera2Draw(program: Int) {
     }
 
     private val texCoordBuffer by lazy {
-        createFloatBuffer(floatArrayOf(
+        createFloatBuffer(
+            floatArrayOf(
                 0f, 0f, 1f, 1f,
                 0f, 1f, 1f, 1f,
                 1f, 1f, 1f, 1f,
                 1f, 0f, 1f, 1f
-        ))
+            )
+        )
     }
 
     private var posHandle: Int = -1
@@ -195,14 +199,18 @@ class Camera2Draw(program: Int) {
         Matrix.translateM(stMatrix, 0, 1f, 1f, 0f)
         // 绕着z轴旋转
         Matrix.rotateM(stMatrix, 0, 180f, 0f, 0f, 1f)
-        
+
         enableVertexAttrib(posHandle)
         enableVertexAttrib(texCoordHandle)
 
-        GLES20.glVertexAttribPointer(posHandle, 3, GLES20.GL_FLOAT,
-                false, 12, vertexBuffer)
-        GLES20.glVertexAttribPointer(texCoordHandle, 4, GLES20.GL_FLOAT,
-                false, 16, texCoordBuffer)
+        GLES20.glVertexAttribPointer(
+            posHandle, 3, GLES20.GL_FLOAT,
+            false, 12, vertexBuffer
+        )
+        GLES20.glVertexAttribPointer(
+            texCoordHandle, 4, GLES20.GL_FLOAT,
+            false, 16, texCoordBuffer
+        )
 
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
         GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, textureId)
@@ -211,8 +219,10 @@ class Camera2Draw(program: Int) {
         GLES20.glUniform1i(textureHandle, 0)
 
         GLES20.glUniformMatrix4fv(stMatrixHandle, 1, false, stMatrix, 0)
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, 6,
-                GLES20.GL_UNSIGNED_SHORT, indexBuffer)
+        GLES20.glDrawElements(
+            GLES20.GL_TRIANGLES, 6,
+            GLES20.GL_UNSIGNED_SHORT, indexBuffer
+        )
 
         disableVertexAttrib(posHandle)
         disableVertexAttrib(texCoordHandle)

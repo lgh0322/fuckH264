@@ -23,19 +23,25 @@ import java.nio.ByteBuffer
  * @param isRecording 使用外部数组来判断是否需要停止
  *
  * */
-class VideoRecorder(private val width: Int, private val height: Int,
-                    bitRate: Int,
-                    frameRate: Int = 15,
-                    frameInterval: Int = 5,
-                    private val isRecording: List<Any>,
-                    private val readySurface: (Surface) -> Unit,
-                    private val dataCallback: (frame: Int, timeStamp: Long, bufferInfo: MediaCodec.BufferInfo,
-                                               data: ByteBuffer) -> Unit,
-                    private val outputFormatChanged: (MediaFormat) -> Unit = {}) : Runnable {
+class VideoRecorder(
+    private val width: Int, private val height: Int,
+    bitRate: Int,
+    frameRate: Int = 15,
+    frameInterval: Int = 5,
+    private val isRecording: List<Any>,
+    private val readySurface: (Surface) -> Unit,
+    private val dataCallback: (
+        frame: Int, timeStamp: Long, bufferInfo: MediaCodec.BufferInfo,
+        data: ByteBuffer
+    ) -> Unit,
+    private val outputFormatChanged: (MediaFormat) -> Unit = {}
+) : Runnable {
     private val TAG = "VideoRecorder"
 
-    private val mediaFormat = createVideoFormat(Size(width, height), bitRate = bitRate, frameRate = frameRate,
-            iFrameInterval = frameInterval)
+    private val mediaFormat = createVideoFormat(
+        Size(width, height), bitRate = bitRate, frameRate = frameRate,
+        iFrameInterval = frameInterval
+    )
 
     private val encodeCore by lazy {
         SurfaceEncodeCore(width, height)
@@ -94,12 +100,20 @@ class VideoRecorder(private val width: Int, private val height: Int,
                 bufferInfo.size = 0
             }
             if (bufferInfo.size != 0) {
-                Log.d(TAG, "buffer info offset ${bufferInfo.offset} time is ${bufferInfo.presentationTimeUs} ")
+                Log.d(
+                    TAG,
+                    "buffer info offset ${bufferInfo.offset} time is ${bufferInfo.presentationTimeUs} "
+                )
                 encodedData?.apply {
                     encodedData.position(bufferInfo.offset)
                     encodedData.limit(bufferInfo.offset + bufferInfo.size)
                     Log.d(TAG, "sent " + bufferInfo.size + " bytes to muxer")
-                    dataCallback.invoke(frameCount, bufferInfo.presentationTimeUs, bufferInfo, encodedData)
+                    dataCallback.invoke(
+                        frameCount,
+                        bufferInfo.presentationTimeUs,
+                        bufferInfo,
+                        encodedData
+                    )
                 }
             }
             codec.releaseOutputBuffer(it, false)

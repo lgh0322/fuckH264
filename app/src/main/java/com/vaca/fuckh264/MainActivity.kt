@@ -214,15 +214,15 @@ class MainActivity : AppCompatActivity() {
         val videoRecorder = VideoRecorder(width, height, bitRate, frameRate,
             frameInterval, isRecording, surfaceCallback, { frame, timeStamp, bufferInfo, data ->
                 val byteArray = data.genData()
-var count=0
+                var count = 0
 
                 for (k in 0 until byteArray.size - 5) {
-                    if (byteArray[0+k] == 0.toByte() && byteArray[1+k] == 0.toByte() && byteArray[2+k] == 0.toByte() && byteArray[3+k] == 1.toByte()) {
-                                        count++
+                    if (byteArray[0 + k] == 0.toByte() && byteArray[1 + k] == 0.toByte() && byteArray[2 + k] == 0.toByte() && byteArray[3 + k] == 1.toByte()) {
+                        count++
                     }
                 }
-                if(count>1){
-                    Log.e("gagax",count.toString())
+                if (count > 1) {
+                    Log.e("gagax", count.toString())
                 }
 
 

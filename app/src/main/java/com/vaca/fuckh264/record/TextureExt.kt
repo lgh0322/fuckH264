@@ -24,8 +24,10 @@ fun buildFrameBuffer(): Int {
 }
 
 fun appendFBOTexture(textureId: Int, target: Int = GLES11Ext.GL_TEXTURE_EXTERNAL_OES) {
-    GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER,
-            GLES20.GL_COLOR_ATTACHMENT0, target, textureId, 0)
+    GLES20.glFramebufferTexture2D(
+        GLES20.GL_FRAMEBUFFER,
+        GLES20.GL_COLOR_ATTACHMENT0, target, textureId, 0
+    )
     unBindTexture(target)
     unBindFrameBuffer()
 }

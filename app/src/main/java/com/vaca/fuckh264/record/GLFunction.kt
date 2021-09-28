@@ -141,7 +141,7 @@ fun checkGlError(op: String) {
     }
 }
 
-fun checkFrameBuffer(){
+fun checkFrameBuffer() {
     val status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER)
     if (status != GLES20.GL_FRAMEBUFFER_COMPLETE) {
         throw RuntimeException("Frame Buffer is not complete")
@@ -155,7 +155,8 @@ fun checkLocation(location: Int, label: String) {
 }
 
 fun glVersion(): Int {
-    val am = MainApplication.application.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    val am =
+        MainApplication.application.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
     val info = am.deviceConfigurationInfo ?: return 0
     return info.reqGlEsVersion
 }

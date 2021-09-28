@@ -3,9 +3,9 @@ package com.vaca.fuckh264.record
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
-import androidx.annotation.IntRange
 import android.util.Log
 import android.util.Size
+import androidx.annotation.IntRange
 import java.nio.ByteBuffer
 
 /**
@@ -19,10 +19,12 @@ import java.nio.ByteBuffer
 /*
 * 处理MediaCodeC输出队列数据
 * */
-fun MediaCodec.disposeOutput(bufferInfo: MediaCodec.BufferInfo, defTimeOut: Long,
-                             endStream: () -> Unit = {},
-                             formatChanged: () -> Unit = {},
-                             render: (outputBufferId: Int) -> Unit) {
+fun MediaCodec.disposeOutput(
+    bufferInfo: MediaCodec.BufferInfo, defTimeOut: Long,
+    endStream: () -> Unit = {},
+    formatChanged: () -> Unit = {},
+    render: (outputBufferId: Int) -> Unit
+) {
     //  获取可用的输出缓存队列
     val outputBufferId = dequeueOutputBuffer(bufferInfo, defTimeOut)
     Log.d("disposeOutput", "output buffer id : $outputBufferId ")
@@ -53,10 +55,12 @@ data class InputCodeCData(val id: Int, val inputBuffer: ByteBuffer?)
  *
  * @param needEnd when bufferId is INFO_TRY_AGAIN_LATER, is need to break loop
  * */
-fun MediaCodec.handleOutputBuffer(bufferInfo: MediaCodec.BufferInfo, defTimeOut: Long,
-                                  formatChanged: () -> Unit = {},
-                                  render: (bufferId: Int) -> Unit,
-                                  needEnd: Boolean = true) {
+fun MediaCodec.handleOutputBuffer(
+    bufferInfo: MediaCodec.BufferInfo, defTimeOut: Long,
+    formatChanged: () -> Unit = {},
+    render: (bufferId: Int) -> Unit,
+    needEnd: Boolean = true
+) {
     loopOut@ while (true) {
         //  获取可用的输出缓存队列
         val outputBufferId = dequeueOutputBuffer(bufferInfo, defTimeOut)
@@ -77,21 +81,23 @@ fun MediaCodec.handleOutputBuffer(bufferInfo: MediaCodec.BufferInfo, defTimeOut:
 }
 
 
-fun createVideoFormat(size: Size, colorFormat: Int = MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface,
-                      bitRate: Int, frameRate: Int, iFrameInterval: Int): MediaFormat {
+fun createVideoFormat(
+    size: Size, colorFormat: Int = MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface,
+    bitRate: Int, frameRate: Int, iFrameInterval: Int
+): MediaFormat {
     return MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, size.width, size.height)
-            .apply {
-                setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat)
+        .apply {
+            setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat)
 
-                // 大部分机型无效
+            // 大部分机型无效
 //                setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
 //                setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel11)
 //                setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CQ)
 
-                setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
-                setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
-                setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
-            }
+            setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
+            setInteger(MediaFormat.KEY_FRAME_RATE, frameRate)
+            setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
+        }
 }
 
 /**
@@ -102,10 +108,14 @@ fun createVideoFormat(size: Size, colorFormat: Int = MediaCodecInfo.CodecCapabil
  * MPEG-4 AAC LD 低延迟规格（Low Delay）
  * MPEG-4 AAC HE 高效率规格（High Efficiency）
  * */
-fun createAACFormat(bitRate: Int = 128000, sampleRate: Int = 44100,
-                    @IntRange(from = 1, to = 2) channel: Int = 1): MediaFormat {
-    return MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate,
-            channel).apply {
+fun createAACFormat(
+    bitRate: Int = 128000, sampleRate: Int = 44100,
+    @IntRange(from = 1, to = 2) channel: Int = 1
+): MediaFormat {
+    return MediaFormat.createAudioFormat(
+        MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate,
+        channel
+    ).apply {
         setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
         // 默认使用LC底规格
         setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
