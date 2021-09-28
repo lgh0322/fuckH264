@@ -163,7 +163,7 @@ class MainActivity : AppCompatActivity() {
             override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
 
                 startBackgroundThread()
-                start(720, 1280, 800000, surfaceCallback = {
+                start(720, 1280, 8000000, surfaceCallback = {
                     mySurface = it
                     openCamera()
                 })
