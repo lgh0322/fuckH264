@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: Fuck?) {
         if (event != null) {
-            setupDecoder(binding.ga.holder.surface, MediaFormat.MIMETYPE_VIDEO_HEVC, 720, 1280)
+            setupDecoder(binding.ga.holder.surface, MediaFormat.MIMETYPE_VIDEO_HEVC, 1080, 1920)
             yes = 1
         }
     }
@@ -82,9 +82,9 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "setupDecoder surface:$surface mime:$mime w:$width h:$height")
         val format = MediaFormat.createVideoFormat(mime, width, height)
         mMediaDecoder = MediaCodec.createDecoderByType(mime)
-        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 720 * 1280)
-        format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1280)
-        format.setInteger(MediaFormat.KEY_MAX_WIDTH, 720)
+        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 1080 * 1920)
+        format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1920)
+        format.setInteger(MediaFormat.KEY_MAX_WIDTH, 1080)
         format.setByteBuffer("csd-0", ByteBuffer.wrap(VideoRecorder.vpsspspps!!))
         mMediaDecoder!!.configure(format, surface, null, 0)
         mMediaDecoder!!.start()
@@ -120,9 +120,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    var poolx: ByteArray = ByteArray(10000000) {
-        0.toByte()
-    }
+
 
     var poolIndex = 0
 
@@ -144,12 +142,7 @@ class MainActivity : AppCompatActivity() {
         binding.end.setOnClickListener {
             isRecording.clear()
             recorderThread.shutdown()
-            dataScope.launch {
-                delay(1000)
-                poolx = add(VideoRecorder.pps, poolx)
-                poolx = add(VideoRecorder.sps, poolx)
-                File(PathUtil.getPathX("fuck.h264")).writeBytes(poolx!!.copyOfRange(0, poolIndex))
-            }
+
         }
 
 
@@ -162,7 +155,7 @@ class MainActivity : AppCompatActivity() {
             override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
 
                 startBackgroundThread()
-                start(720, 1280, 8000000, surfaceCallback = {
+                start(1080, 1920, 800000, surfaceCallback = {
                     mySurface = it
                     openCamera()
                 })
@@ -223,8 +216,8 @@ class MainActivity : AppCompatActivity() {
 
 
     fun start(
-        width: Int, height: Int, bitRate: Int, frameRate: Int = 7,
-        frameInterval: Int = 5,
+        width: Int, height: Int, bitRate: Int, frameRate: Int = 15,
+        frameInterval: Int = 20,
         surfaceCallback: (surface: Surface) -> Unit
     ) {
         isRecording.add(1)
