@@ -6,6 +6,7 @@ import android.util.Log
 import android.util.Size
 import android.view.Surface
 import com.vaca.fuckh264.Fuck
+import com.vaca.fuckh264.FuckH265
 import org.greenrobot.eventbus.EventBus
 
 import java.io.IOException
@@ -43,6 +44,7 @@ class VideoRecorder(
     companion object{
         var sps:ByteArray?=null
         var pps:ByteArray?=null
+        var vpsspspps:ByteArray?=null
     }
 
 
@@ -68,7 +70,30 @@ class VideoRecorder(
         Log.d(TAG, "runnable init thread: ${Thread.currentThread().name} ")
         try {
             // Mime 决定输出数据格式，这里的AVC代表H264
-            codec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
+            codec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_HEVC)
+
+     /*       codec.setCallback(object:MediaCodec.Callback(){
+                override fun onInputBufferAvailable(p0: MediaCodec, p1: Int) {
+
+                }
+
+                override fun onOutputBufferAvailable(
+                    p0: MediaCodec,
+                    p1: Int,
+                    p2: MediaCodec.BufferInfo
+                ) {
+
+                }
+
+                override fun onError(p0: MediaCodec, p1: MediaCodec.CodecException) {
+
+                }
+
+                override fun onOutputFormatChanged(p0: MediaCodec, p1: MediaFormat) {
+
+                }
+
+            })*/
         } catch (e: IOException) {
             throw RuntimeException("code c init failed $e")
         }
@@ -101,34 +126,44 @@ class VideoRecorder(
         }
         codec.handleOutputBuffer(bufferInfo, 0, {
             if (!isFormatChanged) {
+                val xx=codec.getOutputFormat().getByteBuffer("csd-0")
+//                FuckH265().searchVpsSpsPpsFromH265(xx)
+                if(xx!=null){
+                    val ga=ByteArray(xx.remaining()){
+                        0.toByte()
+                    }
+                    xx.get(ga,0,ga.size)
+                    vpsspspps=ga
+                    EventBus.getDefault().post(Fuck(0))
+                }
                 outputFormatChanged.invoke(codec.outputFormat)
                 isFormatChanged = true
             }
         }, {
             val encodedData = codec.getOutputBuffer(it)
 
-            if(sps==null){
-                val fuck=codec.getOutputFormat().getByteBuffer("csd-0")
-                if(fuck!=null){
-                    val ga=ByteArray(fuck.remaining()){
-                        0.toByte()
-                    }
-                    fuck.get(ga,0,ga.size)
-                    sps=ga
-                }
-            }
-
-            if(pps==null){
-                val fuck2=codec.getOutputFormat().getByteBuffer("csd-1")
-                if(fuck2!=null){
-                    val ga=ByteArray(fuck2.remaining()){
-                        0.toByte()
-                    }
-                    fuck2.get(ga,0,ga.size)
-                   pps=ga
-                    EventBus.getDefault().post(Fuck(0))
-                }
-            }
+//            if(sps==null){
+//                val fuck=codec.getOutputFormat().getByteBuffer("csd-0")
+//                if(fuck!=null){
+//                    val ga=ByteArray(fuck.remaining()){
+//                        0.toByte()
+//                    }
+//                    fuck.get(ga,0,ga.size)
+//                    sps=ga
+//                }
+//            }
+//
+//            if(pps==null){
+//                val fuck2=codec.getOutputFormat().getByteBuffer("csd-1")
+//                if(fuck2!=null){
+//                    val ga=ByteArray(fuck2.remaining()){
+//                        0.toByte()
+//                    }
+//                    fuck2.get(ga,0,ga.size)
+//                   pps=ga
+//                    EventBus.getDefault().post(Fuck(0))
+//                }
+//            }
 
 
 

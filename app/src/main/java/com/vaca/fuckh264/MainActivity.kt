@@ -27,7 +27,6 @@ import java.io.File
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.Executors
-import kotlin.experimental.and
 
 class MainActivity : AppCompatActivity() {
 
@@ -68,12 +67,13 @@ class MainActivity : AppCompatActivity() {
         EventBus.getDefault().unregister(this)
     }
 
-    var yes=0
+    var yes = 0
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onMessageEvent(event: Fuck?) {
         if (event != null) {
-            setupDecoder(binding.ga.holder.surface, MediaFormat.MIMETYPE_VIDEO_AVC, 720, 1280)
-            yes=1
+            setupDecoder(binding.ga.holder.surface, MediaFormat.MIMETYPE_VIDEO_HEVC, 720, 1280)
+            yes = 1
         }
     }
 
@@ -82,11 +82,10 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "setupDecoder surface:$surface mime:$mime w:$width h:$height")
         val format = MediaFormat.createVideoFormat(mime, width, height)
         mMediaDecoder = MediaCodec.createDecoderByType(mime)
-        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 720*1280)
+        format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 720 * 1280)
         format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 1280)
         format.setInteger(MediaFormat.KEY_MAX_WIDTH, 720)
-        format.setByteBuffer("csd-0", ByteBuffer.wrap(VideoRecorder.sps!!))
-        format.setByteBuffer("csd-1", ByteBuffer.wrap(VideoRecorder.pps!!))
+        format.setByteBuffer("csd-0", ByteBuffer.wrap(VideoRecorder.vpsspspps!!))
         mMediaDecoder!!.configure(format, surface, null, 0)
         mMediaDecoder!!.start()
         return true
@@ -147,9 +146,9 @@ class MainActivity : AppCompatActivity() {
             recorderThread.shutdown()
             dataScope.launch {
                 delay(1000)
-                poolx= add(VideoRecorder.pps,poolx)
-                poolx= add(VideoRecorder.sps,poolx)
-                File(PathUtil.getPathX("fuck.h264")).writeBytes(poolx!!.copyOfRange(0,poolIndex))
+                poolx = add(VideoRecorder.pps, poolx)
+                poolx = add(VideoRecorder.sps, poolx)
+                File(PathUtil.getPathX("fuck.h264")).writeBytes(poolx!!.copyOfRange(0, poolIndex))
             }
         }
 
@@ -232,14 +231,15 @@ class MainActivity : AppCompatActivity() {
         val videoRecorder = VideoRecorder(width, height, bitRate, frameRate,
             frameInterval, isRecording, surfaceCallback, { frame, timeStamp, bufferInfo, data ->
                 val byteArray = data.genData()
-                if(yes==1){
-                    offerDecoder(byteArray,byteArray.size,timeStamp)
+                Log.e("fuckyou", byteArray.size.toString())
+                if (yes == 1) {
+                    offerDecoder(byteArray, byteArray.size, timeStamp)
                 }
 
 
-            }) {
-            videoFormats.add(it)
-        }
+            }, {
+                videoFormats.add(it)
+            })
         recorderThread.execute(videoRecorder)
 
     }
