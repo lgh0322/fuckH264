@@ -38,6 +38,12 @@ class VideoRecorder(
 ) : Runnable {
     private val TAG = "VideoRecorder"
 
+    companion object{
+        var sps:ByteArray?=null
+        var pps:ByteArray?=null
+    }
+
+
     private val mediaFormat = createVideoFormat(
         Size(width, height), bitRate = bitRate, frameRate = frameRate,
         iFrameInterval = frameInterval
@@ -85,6 +91,8 @@ class VideoRecorder(
         inputSurface.release()
     }
 
+
+
     private fun drainEncoder(isEnd: Boolean = false) {
         if (isEnd) {
             codec.signalEndOfInputStream()
@@ -97,42 +105,32 @@ class VideoRecorder(
         }, {
             val encodedData = codec.getOutputBuffer(it)
 
-            val fuck=codec.getOutputFormat().getByteBuffer("csd-0")
-            if(fuck!=null){
-                val ga=ByteArray(fuck.remaining()){
-                    0.toByte()
-                }
-                fuck.get(ga,0,ga.size)
-                Log.e("yes","my sps")
-
-                val type=fuck[4].toUByte().toInt().and(0x1f)
-                if(type==7){
-                    Log.e("yes","fuckSps")
-                }
-                else
-                    if(type==8){
-                        Log.e("yes","fuckPps")
+            if(sps==null){
+                val fuck=codec.getOutputFormat().getByteBuffer("csd-0")
+                if(fuck!=null){
+                    val ga=ByteArray(fuck.remaining()){
+                        0.toByte()
                     }
+                    fuck.get(ga,0,ga.size)
+                    sps=ga
+                }
+            }
+
+            if(pps==null){
+                val fuck2=codec.getOutputFormat().getByteBuffer("csd-1")
+                if(fuck2!=null){
+                    val ga=ByteArray(fuck2.remaining()){
+                        0.toByte()
+                    }
+                    fuck2.get(ga,0,ga.size)
+                   pps=ga
+                }
             }
 
 
-            val fuck2=codec.getOutputFormat().getByteBuffer("csd-1")
-            if(fuck2!=null){
-                val ga=ByteArray(fuck2.remaining()){
-                    0.toByte()
-                }
-                fuck2.get(ga,0,ga.size)
-                Log.e("yes","my pps")
 
-                val type=fuck2[4].toUByte().toInt().and(0x1f)
-                if(type==7){
-                    Log.e("yes","fuckSps")
-                }
-                else
-                    if(type==8){
-                        Log.e("yes","fuckPps")
-                    }
-            }
+
+
 
 
             if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0) {

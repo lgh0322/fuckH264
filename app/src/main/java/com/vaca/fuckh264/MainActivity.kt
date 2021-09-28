@@ -99,6 +99,8 @@ class MainActivity : AppCompatActivity() {
             recorderThread.shutdown()
             dataScope.launch {
                 delay(1000)
+                poolx= add(VideoRecorder.pps,poolx)
+                poolx= add(VideoRecorder.sps,poolx)
                 File(PathUtil.getPathX("fuck.h264")).writeBytes(poolx!!.copyOfRange(0,poolIndex))
             }
         }
